@@ -368,7 +368,8 @@ function prepare_rootfs_for_chroot()
 	fi
 	cp -f /etc/fstab "$REMASTER_DIR/etc/fstab" ||
 		failure "Failed to copy fstab, error=$?"
-	cp -f /etc/mtab "$REMASTER_DIR/etc/mtab" ||
+	cp -f /etc/mtab ~/mtab
+	mv ~/mtab "$REMASTER_DIR/etc/mtab" ||
 		failure "Failed to copy mtab, error=$?"
 
 	echo "Creating DBUS uuid..."
