@@ -81,15 +81,15 @@ else
 		failure "Unable to identify Ubuntu distro codename"
 	APT_SOURCES_TMP_DIR=`mktemp -d`
 	wget -c http://archive.ubuntu.com/ubuntu/ubuntu/ubuntu/dists/$DISTRO_CODENAME/main/source/Sources.gz -O "$APT_SOURCES_TMP_DIR"/Sources.gz
-	GFXBOOT_THEME_UBUNTU_SOURCE_PACKAGE=http://archive.ubuntu.com/ubuntu/ubuntu/ubuntu/pool/main/g/gfxboot-theme-ubuntu/$(zgrep gz "$APT_SOURCES_TMP_DIR"/Sources.gz | grep gfxboot-theme-ubuntu | sed -n 1p | awk '{ print $3 }')
+	GFXBOOT_THEME_UBUNTU_SOURCE_PACKAGE=http://archive.ubuntu.com/ubuntu/ubuntu/ubuntu/pool/main/g/gfxboot-theme-ubuntu/gfxboot-theme-ubuntu_0.21.0.tar.xz
 	wget $GFXBOOT_THEME_UBUNTU_SOURCE_PACKAGE ||
 		failure "Unable to download gfxboot-theme-ubuntu source package from $GFXBOOT_THEME_UBUNTU_SOURCE_PACKAGE"
-	tar xfz *.tar.gz ||
+	tar xfJ *.tar.xz ||
 		failure "Unable to extract gfxboot-theme-ubuntu source package"
 fi
 
 # Build the gfx boot theme
-cd gfxboot-theme-ubuntu
+cd gfxboot-theme-ubuntu-0.21.0
 cd po
 ln -s pt.po pt_PT.po
 cd ..
