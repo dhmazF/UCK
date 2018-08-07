@@ -47,8 +47,8 @@ function run_console()
 	CONSOLE_APP=`which konsole`
 	CONSOLE_APP_OPTIONS=(--caption "UCK customization console" -e /bin/bash)
 	if [ "$CONSOLE_APP" = "" ]; then
-		CONSOLE_APP=`which gnome-terminal`
-		CONSOLE_APP_OPTIONS=(-t "UCK customization console" -e /bin/bash)
+		CONSOLE_APP=`which xterm`
+		CONSOLE_APP_OPTIONS=(-e /bin/bash)
 	fi
 	if [ "$CONSOLE_APP" = "" ]; then
 		CONSOLE_APP=`which xfce4-terminal`
