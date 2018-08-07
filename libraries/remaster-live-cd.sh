@@ -356,7 +356,8 @@ function prepare_rootfs_for_chroot()
 
 	if [ ! -e "$REMASTER_DIR/etc/resolv.conf" ] ; then
 		echo "Copying resolv.conf..."
-		cp -f /etc/resolv.conf "$REMASTER_DIR/etc/resolv.conf" ||
+		cp -d /etc/resolv.conf ~/resolv.conf
+		mv ~/resolv.conf "$REMASTER_DIR/etc/resolv.conf" ||
 			echo "Failed to copy resolv.conf, error=$?"
 	fi
 		
@@ -387,9 +388,6 @@ function prepare_rootfs_for_chroot()
 	echo "Deactivating initctl..."
 	chroot "$REMASTER_DIR" mv /sbin/initctl /sbin/initctl.uck_blocked
 	chroot "$REMASTER_DIR" ln -s /bin/true /sbin/initctl
-
-	echo "Hacking invoke-rc.d to ignore missing init scripts..."
-	chroot "$REMASTER_DIR" sed -i -e "s/exit 100/exit 0 #exit 100/" /usr/sbin/invoke-rc.d
 	
 	echo "Deactivating update-grub..."
 	chroot "$REMASTER_DIR" mv /usr/sbin/update-grub /usr/sbin/update-grub.uck_blocked
@@ -400,13 +398,8 @@ function prepare_rootfs_for_chroot()
 	chroot "$REMASTER_DIR" ln -s /bin/true /usr/sbin/grub-probe
 
 	echo "Hacking grub-probe postinst/postrm..."
-	chroot "$REMASTER_DIR" sed -i -e "s/exec update-grub/true #exec update-grub/" /etc/kernel/postinst.d/zz-update-grub
-	chroot "$REMASTER_DIR" sed -i -e "s/exec update-grub/true #exec update-grub/" /etc/kernel/postrm.d/zz-update-grub
-
-	if [ ! -e "$REMASTER_DIR/scripts" ]; then
-		echo "Linking missing /scripts dir..."
-		chroot "$REMASTER_DIR" ln -s /usr/share/initramfs-tools/scripts /scripts
-	fi
+	chroot "$REMASTER_DIR" sed -i -e "s/exec update-grub/#exec update-grub/" /etc/kernel/postinst.d/zz-update-grub
+	chroot "$REMASTER_DIR" sed -i -e "s/exec update-grub/#exec update-grub/" /etc/kernel/postrm.d/zz-update-grub
 
 	echo "Remembering kernel update state..."
 	update_flags="reboot-required reboot-required.pkgs do-not-hibernate"
@@ -431,9 +424,6 @@ function clean_rootfs_after_chroot()
 	echo "Reactivating initctl..."
 	chroot "$REMASTER_DIR" rm /sbin/initctl
 	chroot "$REMASTER_DIR" mv /sbin/initctl.uck_blocked /sbin/initctl
-
-	echo "Restoring invoke-rc.d..."
-	chroot "$REMASTER_DIR" sed -i -e "s/exit 0 #exit 100/exit 100/" /usr/sbin/invoke-rc.d
 	
 	echo "Reactivating update-grub..."
 	chroot "$REMASTER_DIR" rm /usr/sbin/update-grub
@@ -444,14 +434,9 @@ function clean_rootfs_after_chroot()
 	chroot "$REMASTER_DIR" mv /usr/sbin/grub-probe.uck_blocked /usr/sbin/grub-probe
 
 	echo "Reactivating grub-probe postinst/postrm..."
-	chroot "$REMASTER_DIR" sed -i -e "s/true #exec update-grub/exec update-grub/" /etc/kernel/postinst.d/zz-update-grub
-	chroot "$REMASTER_DIR" sed -i -e "s/true #exec update-grub/exec update-grub/" /etc/kernel/postrm.d/zz-update-grub
+	chroot "$REMASTER_DIR" sed -i -e "s/#exec update-grub/exec update-grub/" /etc/kernel/postinst.d/zz-update-grub
+	chroot "$REMASTER_DIR" sed -i -e "s/#exec update-grub/exec update-grub/" /etc/kernel/postrm.d/zz-update-grub
 	
-	if [ -L "$REMASTER_DIR/scripts" ]; then
-		echo "Removing linked /scripts dir..."
-		chroot "$REMASTER_DIR" rm /scripts
-	fi
-
 	UCK_USER_HOME_DIR=`xauth info|grep 'Authority file'| sed "s/[ \t]//g" | sed "s/\/\.Xauthority//" | cut -d ':' -f2`
 	if [ `echo $UCK_USER_HOME_DIR | cut -d '/' -f2` == 'home' ] ; then
 		echo "Removing /home/username directory..."
